@@ -87,6 +87,7 @@ void ATGCharacterPlayer::Move(const FInputActionValue& Value)
 
 void ATGCharacterPlayer::Look(const FInputActionValue& Value)
 {
+	// 인수로 Input값을 받아서
 	FVector2D LookAxisVector = Value.Get<FVector2D>();
 
 	AddControllerYawInput(LookAxisVector.X);
