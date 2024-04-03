@@ -19,7 +19,13 @@ public:
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override; // 아래 3가지 액션들과 Move, Look 함수를 언리얼 엔진의 입력 시스템에 매핑
 
 protected:
-	virtual void BeginPlay() override; // 아래의 매핑 컨텍스트를 할당하는 역할
+	// Character Control Section
+	//void ChangeCharacterControl();
+	//void SetCharacterControl(ECharacterControlType NewCharacterControlType);
+	virtual void SetCharacterControlData(const class UTGCharacterControlData* CharacterControlData) override;
+
+	// 아래의 매핑 컨텍스트를 할당하는 역할
+	virtual void BeginPlay() override;
 
 	// 카메라와 관련된 설정
 	// 스프링 암 - 카메라를 지탱해주는 지지대 역할
