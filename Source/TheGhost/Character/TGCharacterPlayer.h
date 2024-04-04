@@ -20,8 +20,8 @@ public:
 
 protected:
 	// Character Control Section
-	//void ChangeCharacterControl();
-	//void SetCharacterControl(ECharacterControlType NewCharacterControlType);
+	void ChangeCharacterControl(); // 인풋매핑컨텍스트를 바꿔치기하는 함수
+	void SetCharacterControl(ECharacterControlType NewCharacterControlType); // 컨트롤에 관한 모든 설정을 진행
 	virtual void SetCharacterControlData(const class UTGCharacterControlData* CharacterControlData) override;
 
 	// 아래의 매핑 컨텍스트를 할당하는 역할
@@ -37,19 +37,27 @@ protected:
 	TObjectPtr<class UCameraComponent> FollowCamera;
 
 	// 입력에 대한 설정
-	// 다른 에셋으로 변ㄱ경할 수 있도록 설계하기 위해 지정자를 EditAnywhere로 설정
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, Meta = (AllowPrivateAccess = "true"))
-	TObjectPtr<class UInputMappingContext> DefaultMappingContext; // 매핑 컨텍스트
-
+	// 다른 에셋으로 변경할 수 있도록 설계하기 위해 지정자를 EditAnywhere로 설정
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, Meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<class UInputAction> JumpAction; // 액션
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, Meta = (AllowPrivateAccess = "true"))
-	TObjectPtr<class UInputAction> MoveAction;
+	TObjectPtr<class UInputAction> ChangeControlAction; // V키로 시점 변경
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, Meta = (AllowPrivateAccess = "true"))
-	TObjectPtr<class UInputAction> LookAction;
+	TObjectPtr<class UInputAction> ShoulderMoveAction;
 
-	void Move(const FInputActionValue& Value);
-	void Look(const FInputActionValue& Value);
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, Meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<class UInputAction> ShoulderLookAction;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, Meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<class UInputAction> QuaterMoveAction;
+
+	void ShoulderMove(const FInputActionValue& Value);
+	void ShoulderLook(const FInputActionValue& Value);
+
+	void QuaterMove(const FInputActionValue& Value);
+
+	ECharacterControlType CurrentCharacterControlType;
+
 };
