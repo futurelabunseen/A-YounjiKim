@@ -33,7 +33,7 @@ void ATGGASCharacterPlayer::PossessedBy(AController* NewController)
 		{
 			FGameplayAbilitySpec StartSpec(StartAbility);
 			// 아이디에 대한 정보를 집어넣는 스택
-			
+			StartSpec.InputID = InputId++;
 			ASC->GiveAbility(StartSpec);
 
 			// 클라이언트에서는 호출되지 않고, 서버에서만 호출되기 때문에 두 군데에서 호출해도 문제가 발생하지 않는다.
@@ -57,17 +57,38 @@ void ATGGASCharacterPlayer::SetupGASInputComponent()
 		UEnhancedInputComponent* EnhancedInputComponent = CastChecked<UEnhancedInputComponent>(InputComponent);
 
 		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Triggered, this, &ATGGASCharacterPlayer::GASInputPressed, 0);
-		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Completed, this, &ATGGASCharacterPlayer::GASInputReleased);
-		EnhancedInputComponent->BindAction(AttackAction, ETriggerEvent::Triggered, this, &ATGGASCharacterPlayer::GASInputPressed);
+		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Completed, this, &ATGGASCharacterPlayer::GASInputReleased, 0);
+		//EnhancedInputComponent->BindAction(AttackAction, ETriggerEvent::Triggered, this, &ATGGASCharacterPlayer::GASInputPressed);
 	}
 }
 
 void ATGGASCharacterPlayer::GASInputPressed(int32 InputId)
 {
-	// 입력이 들어왔을 때 특정 어빌리티 설정
-
+	// 사용자 입력이 들어오면 특정 어빌리티를 발동시키도록 설정
+	FGameplayAbilitySpec* Spec = ASC->FindAbilitySpecFromInputID(InputId); // 인자 InputId에 매핑된 어빌리티의 Spec 정보를 변수에 할당
+	if (Spec)
+	{
+		Spec->InputPressed = true; // 현재 스펙 상태를 Input이 들어온 상태라고 변경해줌.
+		if (Spec->IsActive()) // 어빌리티가 이미 발동되어 있는 상태인지 판단
+		{
+			ASC->AbilitySpecInputPressed(*Spec); // 입력이 들어왔다는 신호를 어빌리티 스펙에 전달해줌. 
+		}
+		else // 어빌리티가 아직 발동되지 않은 경우
+		{
+			ASC->TryActivateAbility(Spec->Handle); // 스펙이 가지고 있는 핸들 값을 인자로 넘겨 발동되도록 제어해준다.
+		}
+	}
 }
 
 void ATGGASCharacterPlayer::GASInputReleased(int32 InputId)
 {
+	FGameplayAbilitySpec* Spec = ASC->FindAbilitySpecFromInputID(InputId);
+	if (Spec)
+	{
+		Spec->InputPressed = false;
+		if (Spec->IsActive())
+		{
+			ASC->AbilitySpecInputReleased(*Spec); // 발동이 중지되도록 설정.
+		}
+	}
 }
