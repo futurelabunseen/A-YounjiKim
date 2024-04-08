@@ -27,6 +27,7 @@ protected:
 	// 아래의 매핑 컨텍스트를 할당하는 역할
 	virtual void BeginPlay() override;
 
+protected:
 	// 카메라와 관련된 설정
 	// 스프링 암 - 카메라를 지탱해주는 지지대 역할
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, Meta = (AllowPrivateAccess = "true")) // Meta 추가 지정자 = private으로 선언된 UE 객체들을 블루프린트에서도 접근할 수 있도록 만들어주는 특별한 지시자
