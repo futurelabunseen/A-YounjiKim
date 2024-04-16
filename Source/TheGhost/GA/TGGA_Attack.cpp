@@ -15,7 +15,7 @@ void UTGGA_Attack::ActivateAbility(const FGameplayAbilitySpecHandle Handle, cons
 {
 	// 어빌리티 발동 상태로 변경 (한 번)
 	Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);
-
+	
 	// 몽타주 변환
 	ATGCharacterBase* TGCharacter = CastChecked<ATGCharacterBase>(ActorInfo->AvatarActor.Get()); // Character로 형변환 필요
 	//UAbilityTask_PlayMontageAndWait* PlayAttackTask = UAbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(this, TEXT("PlayAttack"), 몽타주액션);
