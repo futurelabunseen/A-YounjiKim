@@ -7,10 +7,10 @@
 ATGGameMode::ATGGameMode()
 {
 	// DefaultPawnClass - 
-	static ConstructorHelpers::FClassFinder<APawn> ThirdPersonClassRef(TEXT("/Script/TheGhost.TGCharacterPlayer"));
-	if (ThirdPersonClassRef.Class)
+	static ConstructorHelpers::FClassFinder<APawn> DefaultPawnClassRef(TEXT("/Script/Engine.Blueprint'/Game/TheGhost/Blueprint/BP_TGCharacterPlayer.BP_TGCharacterPlayer_C'"));
+	if (DefaultPawnClassRef.Class)
 	{
-		DefaultPawnClass = ThirdPersonClassRef.Class;
+		DefaultPawnClass = DefaultPawnClassRef.Class;
 	}
 	// PlayerControllerClass - PlayerController에 대한 설정
 	static ConstructorHelpers::FClassFinder<APlayerController> PlayerControllerClassRef(TEXT("/Script/TheGhost.TGPlayerController"));

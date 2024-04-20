@@ -39,7 +39,7 @@ ATGCharacterBase::ATGCharacterBase()
 	{
 		GetMesh()->SetSkeletalMesh(CharacterMeshRef.Object);
 	}
-	static ConstructorHelpers::FClassFinder<UAnimInstance> AnimInstanceClassRef(TEXT("/Game/TheGhost/Animation/ABP_ABCharacter.ABP_ABCharacter_C"));
+	static ConstructorHelpers::FClassFinder<UAnimInstance> AnimInstanceClassRef(TEXT("/Game/TheGhost/Animation/ABP_TG_Character.ABP_TG_Character_C"));
 	//static ConstructorHelpers::FClassFinder<UAnimInstance> AnimInstanceClassRef(TEXT("/Game/TheGhost/Characters/Mannequins/Animations/ABP_Quinn.ABP_Quinn_C"));
 	if (AnimInstanceClassRef.Class)
 	{
