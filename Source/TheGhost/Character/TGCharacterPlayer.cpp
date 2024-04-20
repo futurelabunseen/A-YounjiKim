@@ -4,10 +4,12 @@
 #include "Character/TGCharacterPlayer.h"
 #include "Camera/CameraComponent.h"
 #include "GameFramework/SpringArmComponent.h"
+#include "GameFramework/CharacterMovementComponent.h"
 #include "InputMappingContext.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "TGCharacterControlData.h"
+#include "Animation/AnimMontage.h"
 
 ATGCharacterPlayer::ATGCharacterPlayer()
 {
@@ -52,6 +54,12 @@ ATGCharacterPlayer::ATGCharacterPlayer()
 		QuaterMoveAction = InputActionQuaterMoveRef.Object;
 	}
 
+	static ConstructorHelpers::FObjectFinder<UInputAction> InputActionAttackRef(TEXT("/Script/EnhancedInput.InputAction'/Game/TheGhost/Input/Actions/IA_Attack.IA_Attack'"));
+	if (nullptr != InputActionAttackRef.Object)
+	{
+		AttackAction = InputActionAttackRef.Object;
+	}
+
 	CurrentCharacterControlType = ECharacterControlType::Quater;
 }
 
@@ -74,6 +82,7 @@ void ATGCharacterPlayer::SetupPlayerInputComponent(class UInputComponent* Player
 	EnhancedInputComponent->BindAction(ShoulderMoveAction, ETriggerEvent::Triggered, this, &ATGCharacterPlayer::ShoulderMove);
 	EnhancedInputComponent->BindAction(ShoulderLookAction, ETriggerEvent::Triggered, this, &ATGCharacterPlayer::ShoulderLook);
 	EnhancedInputComponent->BindAction(QuaterMoveAction, ETriggerEvent::Triggered, this, &ATGCharacterPlayer::QuaterMove);
+	EnhancedInputComponent->BindAction(AttackAction, ETriggerEvent::Triggered, this, &ATGCharacterPlayer::Attack);
 }
 
 void ATGCharacterPlayer::ChangeCharacterControl()
@@ -165,4 +174,56 @@ void ATGCharacterPlayer::QuaterMove(const FInputActionValue& Value)
 	FVector MoveDirection = FVector(MovementVector.X, MovementVector.Y, 0.0f); // modifier를 사용해 벡터의 X, Y 조정
 	GetController()->SetControlRotation(FRotationMatrix::MakeFromX(MoveDirection).Rotator()); // 현재 ControlRotation을 Forward 방향을 사용하여 지정하면 무브먼트 컴포넌트에서 설정한 옵션에 의해 캐릭터가 자동으로 이동하는 방향을 향해 회전한다.
 	AddMovementInput(MoveDirection, MovementVectorSize);
+}
+
+void ATGCharacterPlayer::Attack()
+{
+	ProcessComboCommand();
+}
+
+void ATGCharacterPlayer::ProcessComboCommand()
+{
+	if (CurrentCombo == 0) // 아직 몽타주 재생이 시작되지 은 경우
+	{
+		ComboActionBegin();
+		return;
+	}
+
+	//if (!ComboTimerHandle.IsValid())
+	//{
+	//	HasNextComboCommand = false;
+	//}
+	//else
+	//{
+	//	HasNextComboCommand = true;
+	//}
+}
+
+void ATGCharacterPlayer::ComboActionBegin()
+{
+	// Combo가 시작되면 호출되므로 콤보 시작됨을 표시
+	CurrentCombo = 1;
+
+	GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_None); // 캐릭터의 이동 기능 중지
+
+	// 애니메이션 세팅
+	const float AttackSpeedRate = 1.0f; // 재생속도 지정
+
+	// 입력이 들어오면 몽타주를 재생
+	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+	AnimInstance->Montage_Play(ComboActionMontage, AttackSpeedRate); //  몽타주 에셋을 지정하여 해당 몽타주를 플레이. 기본 속도인 1.0으로 자동 지정.	
+
+	// 몽타주가 종료될 때 ComboActionEnd 함수가 호출되도록 함.
+	FOnMontageEnded EndDelegate; // 구조체처럼 선언하고
+	EndDelegate.BindUObject(this, &ATGCharacterPlayer::ComboActionEnd); // 이 구조체(EndDelegate)에 내가 바인딩할 정보를 추가.
+	// 왜 강의에서는 같은 클래스 내 메서드인데도 &ATGCharacterBase::ComboActionEnd라고 썼을까? (강의에서는 몽타주 관련 모든 함수를 CharacterBase 클래스에 추가함.)
+	
+	AnimInstance->Montage_SetEndDelegate(EndDelegate, ComboActionMontage); // 몽타주가 종료될 때 아래 함수 호출.
+}
+
+void ATGCharacterPlayer::ComboActionEnd(UAnimMontage* TargetMontage, bool IsProperlyEnded)
+{
+	ensure(CurrentCombo != 0); // 몽타주가 종료될 때에는 몽타주가 재생되고 있어야 하기 때문에 0이 나오면 에러가 발생하도록
+	CurrentCombo = 0;
+	GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_Walking);
 }
