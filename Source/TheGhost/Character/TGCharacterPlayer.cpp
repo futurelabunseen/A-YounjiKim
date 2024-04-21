@@ -10,6 +10,7 @@
 #include "EnhancedInputSubsystems.h"
 #include "TGCharacterControlData.h"
 #include "Animation/AnimMontage.h"
+#include "TGComboActionData.h"
 
 ATGCharacterPlayer::ATGCharacterPlayer()
 {
@@ -189,14 +190,14 @@ void ATGCharacterPlayer::ProcessComboCommand()
 		return;
 	}
 
-	//if (!ComboTimerHandle.IsValid())
-	//{
-	//	HasNextComboCommand = false;
-	//}
-	//else
-	//{
-	//	HasNextComboCommand = true;
-	//}
+	if (!ComboTimerHandle.IsValid()) // 타이머가 설정이 안되어 있을 경우 ComboCommand가 눌렸을 때
+	{                                // 1. 이미 타이머가 발동이 되었는데 시기를 놓쳐서 타이머가 끝난 경우  2. 지정된 연속 콤보가 전부 실행되어 더 이상 콤보로 넘어갈 필요가 없는 경우
+		HasNextComboCommand = false; // 콤보 끊김! (또는 콤보 종료!)
+	}
+	else
+	{
+		HasNextComboCommand = true; // 이어갈 콤보가 있음!
+	}
 }
 
 void ATGCharacterPlayer::ComboActionBegin()
@@ -219,6 +220,10 @@ void ATGCharacterPlayer::ComboActionBegin()
 	// 왜 강의에서는 같은 클래스 내 메서드인데도 &ATGCharacterBase::ComboActionEnd라고 썼을까? (강의에서는 몽타주 관련 모든 함수를 CharacterBase 클래스에 추가함.)
 	
 	AnimInstance->Montage_SetEndDelegate(EndDelegate, ComboActionMontage); // 몽타주가 종료될 때 아래 함수 호출.
+
+	// 콤보가 시작될 때 Timer를 발동시킨다!
+	ComboTimerHandle.Invalidate();
+	SetComboCheckTimer();
 }
 
 void ATGCharacterPlayer::ComboActionEnd(UAnimMontage* TargetMontage, bool IsProperlyEnded)
@@ -226,4 +231,32 @@ void ATGCharacterPlayer::ComboActionEnd(UAnimMontage* TargetMontage, bool IsProp
 	ensure(CurrentCombo != 0); // 몽타주가 종료될 때에는 몽타주가 재생되고 있어야 하기 때문에 0이 나오면 에러가 발생하도록
 	CurrentCombo = 0;
 	GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_Walking);
+}
+
+void ATGCharacterPlayer::SetComboCheckTimer()
+{
+	int32 ComboIndex = CurrentCombo - 1; // 현재 재생되고 있는 몽타주 섹션의 인덱스 정보 얻기 (첫번째 인덱스 섹션이 재생되고 있으면 0번째인 거임)
+	ensure(ComboActionData->EffectiveFrameCount.IsValidIndex(ComboIndex)); // 블루프린트에서 설정한 값이 들어있는 EffectiveFrameCount 배열 중, ComboIndex 값이 배열 안에 들어있는지 검사.
+
+	const float AttackSpeedRate = 1.0f; // 공격 속도
+	float ComboEffectiveTime = (ComboActionData->EffectiveFrameCount[ComboIndex] / ComboActionData->FrameRate) / AttackSpeedRate; // 해당 공격 속도로 진행했을 때 소요되는 시간(프레임)
+	if (ComboEffectiveTime > 0.0f)
+	{
+		GetWorld()->GetTimerManager().SetTimer(ComboTimerHandle, this, &ATGCharacterPlayer::ComboCheck, ComboEffectiveTime, false); // World가 Timer를 재생시키도록 한다. ComboEffectiveTime Interval마다 ComboCheck함수를 호출하게끔 하는데, 반복 실행은 false로 설정.
+	}
+}
+
+void ATGCharacterPlayer::ComboCheck()
+{
+	ComboTimerHandle.Invalidate(); // 타이머가 발동되서 이 함수로 들어온 경우, Timer는 할 일을 다 끝냈으므로 초기화시켜준다.
+	if (HasNextComboCommand) // 타이머 발동 전에 입력이 들어와서 True가 되었다면 다음 섹션으로 넘겨준다.
+	{
+		UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+
+		CurrentCombo = FMath::Clamp(CurrentCombo + 1, 1, ComboActionData->MaxComboCount); // 현재 combo 몽타주의 다음 섹션으로 넘긴다combo+1. maxcombocount를 벗어나지 않도록 clamp(최솟값과 최대값 사이로 값을 제한시킴)
+		FName NextSection = *FString::Printf(TEXT("%s%d"), *ComboActionData->MontageSectionNamePrefix, CurrentCombo); // 다음 섹션의 이름 정보를 가져오기
+		AnimInstance->Montage_JumpToSection(NextSection, ComboActionMontage); // ComboActionMontage의 NextSection으로 바로 점프한다.
+		SetComboCheckTimer(); // 다음 콤보를 위해 타이머를 걸어준다.
+		HasNextComboCommand = false; // 입력값 초기화
+	}
 }
