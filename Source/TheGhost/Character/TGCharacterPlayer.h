@@ -5,13 +5,14 @@
 #include "CoreMinimal.h"
 #include "Character/TGCharacterBase.h"
 #include "InputActionValue.h"
+#include "Interface/TGAnimationAttackInterface.h"
 #include "TGCharacterPlayer.generated.h"
 
 /**
  * 
  */
 UCLASS()
-class THEGHOST_API ATGCharacterPlayer : public ATGCharacterBase
+class THEGHOST_API ATGCharacterPlayer : public ATGCharacterBase, public ITGAnimationAttackInterface
 {
 	GENERATED_BODY()
 public:
@@ -85,4 +86,8 @@ protected:
 	void ComboActionEnd(class UAnimMontage* TargetMontage, bool IsProperlyEnded); // 몽타주가 종료되면 호출 - 몽타주에 설정된 델리게이트를 통해 바로 호출될 수 있도록 함. UAnimMontage 클래스의 FOnMontageEnded 델리게이트를 사용하기 위한 파라미터들.
 	void SetComboCheckTimer(); // 타이머를 발동시키는 함수
 	void ComboCheck(); // 타이머가 발동됐을 때 입력이 들어왔는지 안들어왔는지 체크
+
+	// 공격 판정 섹션
+protected:
+	virtual void AttackHitCheck() override;
 };

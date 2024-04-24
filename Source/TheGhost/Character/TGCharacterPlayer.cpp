@@ -260,3 +260,8 @@ void ATGCharacterPlayer::ComboCheck()
 		HasNextComboCommand = false; // 입력값 초기화
 	}
 }
+
+void ATGCharacterPlayer::AttackHitCheck()
+{
+
+}
