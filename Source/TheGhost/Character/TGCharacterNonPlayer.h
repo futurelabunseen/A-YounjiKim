@@ -14,4 +14,9 @@ class THEGHOST_API ATGCharacterNonPlayer : public ATGCharacterBase
 {
 	GENERATED_BODY()
 	
+public:
+	ATGCharacterNonPlayer();
+
+protected:
+	void SetDead() override;
 };
