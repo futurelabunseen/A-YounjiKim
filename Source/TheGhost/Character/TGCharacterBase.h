@@ -51,4 +51,15 @@ protected:
 	// 공격 판정 섹션
 protected:
 	virtual void AttackHitCheck() override;
+	virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, AActor* DamageCauser) override;
+
+	// Dead 섹션
+protected:
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Stat, Meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<class UAnimMontage> DeadMontage;
+
+	virtual void SetDead(); // 죽는 상태 만들기 위한 함수
+	void PlayDeadAnimation(); // Dead Animation 재생 함수
+
+	float DeadEventDelayTime = 5.0f; // 죽는 상태 5초 유지한 후 사라지게 하기 위한 변수
 };

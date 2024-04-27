@@ -9,6 +9,7 @@
 #include "TGComboActionData.h"
 #include "Components/CapsuleComponent.h"
 #include "Physics/TGCollision.h"
+#include "Engine/DamageEvents.h"
 
 // Sets default values
 ATGCharacterBase::ATGCharacterBase()
@@ -27,7 +28,7 @@ ATGCharacterBase::ATGCharacterBase()
 	GetCharacterMovement()->RotationRate = FRotator(0.0f, 500.0f, 0.0f);
 	GetCharacterMovement()->JumpZVelocity = 700.f;
 	GetCharacterMovement()->AirControl = 0.35f;
-	GetCharacterMovement()->MaxWalkSpeed = 500.f;
+	GetCharacterMovement()->MaxWalkSpeed = 700.f;
 	GetCharacterMovement()->MinAnalogWalkSpeed = 20.f;
 	GetCharacterMovement()->BrakingDecelerationWalking = 2000.f;
 
@@ -72,6 +73,12 @@ ATGCharacterBase::ATGCharacterBase()
 	if (ComboActionDataRef.Object)
 	{
 		ComboActionData = ComboActionDataRef.Object;
+	}
+
+	static ConstructorHelpers::FObjectFinder<UAnimMontage> DeadMontageRef(TEXT("/Script/Engine.AnimMontage'/Game/TheGhost/Animation/AM_CharacterDead.AM_CharacterDead'"));
+	if (DeadMontageRef.Object)
+	{
+		DeadMontage = DeadMontageRef.Object;
 	}
 }
 
@@ -181,8 +188,8 @@ void ATGCharacterBase::AttackHitCheck()
 
 	if (HitDetected)
 	{
-		/*FDamageEvent DamageEvent;
-		OutHitResult.GetActor()->TakeDamage(AttackDamage, DamageEvent, GetController(), this);*/
+		FDamageEvent DamageEvent; // 들어오는 데미지 종류 지정
+		OutHitResult.GetActor()->TakeDamage(AttackDamage, DamageEvent, GetController(), this);
 	}
 
 #if ENABLE_DRAW_DEBUG
@@ -194,4 +201,28 @@ void ATGCharacterBase::AttackHitCheck()
 	DrawDebugCapsule(GetWorld(), CapsuleOrigin, CapsuleHalfHeight, AttackRadius, FRotationMatrix::MakeFromZ(GetActorForwardVector()).ToQuat(), DrawColor, false, 5.0f);
 
 #endif
+}
+
+float ATGCharacterBase::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
+{
+	Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser); // 들어온 데미지 양, 데미지 이벤트, 가해자, 가해자가 사용한 무기 또는 빙의한 폰 정보
+
+	// 방어력이 있으면 DamageAmount의 양을 줄인다.
+
+	SetDead(); // 공격을 받으면 바로 죽음.
+	return DamageAmount; // 최종으로 액터가 받은 데미지의 양
+}
+
+void ATGCharacterBase::SetDead()
+{
+	GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_None); // 캐릭터가 더 이상 움직일 수 없도록 함.
+	PlayDeadAnimation(); // 죽는 몽타주 재생
+	SetActorEnableCollision(false); // 충돌에 대한 기능을 꺼준다. (죽은 캐릭터는 다른 캐릭터의 이동을 방해하지 않도록)
+}
+
+void ATGCharacterBase::PlayDeadAnimation()
+{
+	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance(); // AnimInstance 가져오기
+	AnimInstance->StopAllMontages(0.0f); // 진행되던 다른 모션 중지
+	AnimInstance->Montage_Play(DeadMontage, 1.0f); // 죽는 몽타주를 기본 속도로 실행
 }
