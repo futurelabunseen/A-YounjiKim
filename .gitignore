@@ -3,5 +3,9 @@
 /.vs
 /Build
 /Plugins
+/Binaries
 *.sln
 *_BuiltData.uasset
+*.pdb
+*.exe
+*.uproject
