@@ -2,6 +2,7 @@
 
 
 #include "Game/TGGameMode.h"
+#include "GameFramework/Actor.h"
 #include "TGGameMode.h"
 
 ATGGameMode::ATGGameMode()

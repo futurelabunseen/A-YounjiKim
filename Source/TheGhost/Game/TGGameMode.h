@@ -15,5 +15,4 @@ class THEGHOST_API ATGGameMode : public AGameModeBase
 	GENERATED_BODY()
 public:
 	ATGGameMode();
-private:
 };
