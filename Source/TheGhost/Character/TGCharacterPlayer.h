@@ -27,7 +27,36 @@ protected:
 	// 아래의 매핑 컨텍스트를 할당하는 역할
 	virtual void BeginPlay() override;
 
-	// 카메라와 관련된 설정
+	// 인풋이 들어가면 BindAction 함수로 인해 실행되는 함수들
+	void ShoulderMove(const FInputActionValue& Value);
+	void ShoulderLook(const FInputActionValue& Value);
+
+	void QuaterMove(const FInputActionValue& Value);
+
+// 몽타주 섹션
+// 만약 나중에 만들 NPC도 현재의 몽타주 애니메이션을 재생하게 하고 싶다면 아래 정보를 CharacterBase 헤더에 넣을 것.
+protected:
+	int32 CurrentCombo = 0; // 현재 진행중인 콤보 - 코드에서만 사용할 것이기 때문에 UPROPERTY 붙이지 X / 0일 때는 아직 콤보가 시작되지 않음.
+	FName CurrentInputKey;
+	FName LastInputKey = FName();
+	bool isPlaying = false;
+
+	void ProcessComboCommand(FName ActionName);
+	void PlayAttackMontage(FName ActionName);
+	void ResetComboAction();
+	void ComboActionEnd(class UAnimMontage* TargetMontage, bool IsProperlyEnded); // 몽타주가 종료되면 호출 - 몽타주에 설정된 델리게이트를 통해 바로 호출될 수 있도록 함. UAnimMontage 클래스의 FOnMontageEnded 델리게이트를 사용하기 위한 파라미터들.
+
+	void Attack1Pressed();
+	void Attack2Pressed();
+	void Attack3Pressed();
+	void Attack4Pressed();
+
+	void SetDead() override;
+	void PlayDeadAnimation() override;
+
+
+// 카메라와 관련된 설정
+protected:
 	// 스프링 암 - 카메라를 지탱해주는 지지대 역할
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, Meta = (AllowPrivateAccess = "true")) // Meta 추가 지정자 = private으로 선언된 UE 객체들을 블루프린트에서도 접근할 수 있도록 만들어주는 특별한 지시자
 	TObjectPtr<class USpringArmComponent> CameraBoom;
@@ -53,11 +82,18 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, Meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<class UInputAction> QuaterMoveAction;
 
-	void ShoulderMove(const FInputActionValue& Value);
-	void ShoulderLook(const FInputActionValue& Value);
-
-	void QuaterMove(const FInputActionValue& Value);
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, Meta = (AllowPrivateAccess = "true"))
+	TArray<TObjectPtr<class UInputAction>> AttackAction;
 
 	ECharacterControlType CurrentCharacterControlType;
 
+	// Animation
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Animation)
+	TObjectPtr<class UAnimMontage> ComboActionMontage;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Attack, Meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<class UTGComboActionData> ComboActionData;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Stat, Meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<class UAnimMontage> DeadMontage;
 };
